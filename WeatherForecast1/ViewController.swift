@@ -10,7 +10,7 @@ import UIKit
 import CoreLocation
 
 
-class ViewController: UIViewController,CLLocationManagerDelegate,WeatherServiceDelegate {
+class ViewController: UIViewController,CLLocationManagerDelegate,WeatherServiceDelegate,UITextFieldDelegate {
     @IBOutlet var currentLocationLabel: UILabel!
     @IBOutlet var currentStateLabel: UILabel!
     @IBOutlet var currentDateLabel: UILabel!
@@ -26,6 +26,9 @@ class ViewController: UIViewController,CLLocationManagerDelegate,WeatherServiceD
     let locationManager = CLLocationManager()
     let today = Date()
     var weatherForeCastArray:NSArray = []
+    var cityTextField: UITextField!
+    var loction:String = ""
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -53,6 +56,8 @@ class ViewController: UIViewController,CLLocationManagerDelegate,WeatherServiceD
         self.currentDateLabel.text = result
         
         
+        
+        //Stting of UI according Devices.
         if  UIDevice.current.userInterfaceIdiom == .pad {
             
             self.currentLocationLabel.font = UIFont(name:"Avenir-Light", size: 24.0)
@@ -80,10 +85,83 @@ class ViewController: UIViewController,CLLocationManagerDelegate,WeatherServiceD
         }
         
         
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Add", style: .plain, target: self, action: #selector(leftBarItemAction))
         
+      
         
         // Do any additional setup after loading the view, typically from a nib.
     }
+    
+    
+    //Setup text field.
+    func configurationTextField(textField: UITextField!){
+
+        
+        //delegate method
+        
+        textField.placeholder = "Enter your city"
+        textField.tintColor = UIColor(r: 48, g: 184, b: 255)
+        textField.layer.cornerRadius = 10
+        textField.layer.borderColor = UIColor(r: 48, g: 184, b: 255).cgColor
+        textField.textColor = UIColor(r: 48, g: 184, b: 255)
+        cityTextField  =  textField
+        
+    }
+    
+    //delegate method
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {           cityTextField.resignFirstResponder()
+        return true
+    }
+    
+    //LeftBarbuttonAction
+    func leftBarItemAction() {
+        
+        // create the alert
+        let alert = UIAlertController(title: "City", message: "Enter your city", preferredStyle: UIAlertControllerStyle.alert)
+        
+        // add an action (button)
+        alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: {
+            (action) in
+            
+            //Getting the current location
+            if CLLocationManager.locationServicesEnabled() {
+                self.locationManager.delegate = nil
+                self.locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+                self.locationManager.startUpdatingLocation()
+            }
+            
+            
+
+            if self.cityTextField.text == "" {
+                
+                self.weatherSERVICE.weatherService(city:"Hyderabad")
+                
+                self.navigationItem.title = self.cityTextField.text
+                
+                self.cityLocation(city: "Hyderabad")
+                
+            }else {
+                self.cityLocation(city: self.cityTextField.text!)
+                self.cityLocation(city: self.cityTextField.text!)
+
+                
+            }
+            
+        }))
+        
+        
+        alert.addTextField(configurationHandler: configurationTextField)
+    
+        
+        // show the alert
+        self.present(alert, animated: true, completion: nil)
+        
+    }
+    
+    
+    
+    
+    
     
     
     override func viewWillAppear(_ animated: Bool) {
@@ -157,6 +235,7 @@ class ViewController: UIViewController,CLLocationManagerDelegate,WeatherServiceD
                     
                     //Passing the current City Name to the API
                     self.weatherSERVICE.weatherService(city: city)
+                    self.cityLocation(city: city)
                     
                     
                 }
@@ -197,14 +276,19 @@ class ViewController: UIViewController,CLLocationManagerDelegate,WeatherServiceD
         
         
     }
-
+    
+    func cityLocation(city:String)  {
+        self.loction = city
+        
+    }
+    
     
 
     
     
     @IBAction func forecastBtnClick(_ sender: Any) {
         
-        let currentLoction = "city"
+        let currentLoction = loction
         
         UserDefaults.standard.set(currentLoction, forKey: "yourkey")
         UserDefaults.standard.synchronize()
